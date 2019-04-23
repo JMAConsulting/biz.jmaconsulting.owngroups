@@ -1,8 +1,9 @@
 <?php
-define('PROFILE_ID', 2);
-define('CONSENT', 3);
-define('MSG_ID_CONSENT', 70);
-define('MSG_ID_THANKS', 71);
+define('PROFILE_ID', 15);
+define('CONSENT', 5);
+define('MSG_ID_CONSENT', 68);
+define('MSG_ID_THANKS', 69);
+define('MSG_ID_REQUEST_CONSENT', 70);
 
 require_once 'owngroups.civix.php';
 
@@ -121,6 +122,8 @@ function owngroups_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == 'Group' && $cs = CRM_Utils_Request::retrieve('cs', 'String')) {
     if ($id = CRM_Utils_Request::retrieve('id', 'Positive')) {
       if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
+        $validGroups = [42,45,3,36,9,51,2,31,32,7,4,8,5,23,39,49,6,21];
+        $ids = [];
         $groups = (array) civicrm_api3('GroupContact', 'get', [
           'sequential' => 1,
           'return' => ["group_id", "visibility"],
@@ -133,6 +136,7 @@ function owngroups_civicrm_selectWhereClause($entity, &$clauses) {
           }
           $ids[] = $group['group_id'];
         }
+        $ids = array_merge($ids, $validGroups);
         if (!empty($ids)) {
           $clauses['id'][] = 'IN (' . implode(',', $ids) . ')';
         }
@@ -140,7 +144,23 @@ function owngroups_civicrm_selectWhereClause($entity, &$clauses) {
           $clauses['id'][] = 'IN (0)';
         }
       }
+      else {
+        CRM_Utils_System::permissionDenied();
+        CRM_Utils_System::civiExit();
+      }
     }
+    else {
+      CRM_Utils_System::permissionDenied();
+      CRM_Utils_System::civiExit();
+    }
+  }
+}
+
+function owngroups_civicrm_pageRun(&$page) {
+  if ((get_class($page) == "CRM_Profile_Page_Dynamic" && ($page->getVar('_gid') == PROFILE_ID)) || get_class($page) == "CRM_Mailing_Page_Confirm") {
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/YeeHong.tpl',
+    ));
   }
 }
 
@@ -155,13 +175,17 @@ function owngroups_civicrm_buildForm($formName, &$form) {
     if ($cs = CRM_Utils_Request::retrieve('cs', 'String')) {
       if ($id = CRM_Utils_Request::retrieve('id', 'Positive')) {
         if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
+          CRM_Core_Region::instance('page-body')->add(array(
+            'template' => 'CRM/YeeHong.tpl',
+          ));
+          $form->freeze(['email-Primary']);
           // Check if contact has consented previously.
           $consent = CRM_Utils_Array::collect('custom_' . CONSENT, civicrm_api3('Contact', 'get', [
             'id' => $id,
             'sequential' => 1,
             'return' => 'custom_' . CONSENT
           ])['values']);
-          if (empty($consent)) {
+          if (empty($consent[0])) {
             // Send email since this is the first time of visit.
             $email = civicrm_api3('Email', 'send', [
               'contact_id' => $id,
@@ -249,5 +273,14 @@ function owngroups_civicrm_postProcess($formName, &$form) {
       'contact_id' => $form->getVar('_id'),
       'template_id' => MSG_ID_THANKS,
     ]);
+  }
+}
+
+function owngroups_civicrm_alterMailingRecipients(&$mailingObject, &$criteria, $context) {
+  if ($context == 'pre' && !empty($mailingObject->msg_template_id) && $mailingObject->msg_template_id == MSG_ID_REQUEST_CONSENT) {
+    // criteria to exclude contacts who have already consented.
+    $criteria['consent_filter'] = CRM_Utils_SQL_Select::fragment()
+                                  ->join('civicrm_value_consent_2', "LEFT JOIN civicrm_value_consent_2 et ON et.entity_id = civicrm_contact.id")
+                                  ->where("et.has_consented__5 IS NULL OR et.has_consented__5 <> 1");
   }
 }
