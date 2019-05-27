@@ -179,25 +179,6 @@ function owngroups_civicrm_buildForm($formName, &$form) {
             'template' => 'CRM/YeeHong.tpl',
           ));
           $form->freeze(['email-Primary']);
-          // Check if contact has consented previously.
-          $consent = CRM_Utils_Array::collect('custom_' . CONSENT, civicrm_api3('Contact', 'get', [
-            'id' => $id,
-            'sequential' => 1,
-            'return' => 'custom_' . CONSENT
-          ])['values']);
-          if (empty($consent[0])) {
-            // Send email since this is the first time of visit.
-            $email = civicrm_api3('Email', 'send', [
-              'contact_id' => $id,
-              'template_id' => MSG_ID_CONSENT,
-            ]);
-            if (!$email['is_error']) {
-              civicrm_api3('CustomValue', 'create', [
-                'entity_id' => $id,
-                'custom_' . CONSENT => 1,
-              ]);
-            }
-          }
         }
       }
     }
@@ -269,10 +250,29 @@ function owngroups_civicrm_postProcess($formName, &$form) {
     if (!empty($groups)) {
       $form->assign('groupsContact', implode(',', $groups));
     }
-    $email = civicrm_api3('Email', 'send', [
-      'contact_id' => $form->getVar('_id'),
-      'template_id' => MSG_ID_THANKS,
-    ]);
+    // Check if contact has consented previously.
+    $consent = CRM_Utils_Array::collect('custom_' . CONSENT, civicrm_api3('Contact', 'get', [
+      'id' => $form->getVar('_id'),
+      'sequential' => 1,
+      'return' => 'custom_' . CONSENT
+    ])['values']);
+    if (empty($consent[0])) {
+      // Send email since this is the first time of visit.
+      /* $email = civicrm_api3('Email', 'send', [ */
+      /*   'contact_id' => $id, */
+      /*   'template_id' => MSG_ID_CONSENT, */
+      /* ]); */
+      $email = civicrm_api3('Email', 'send', [
+        'contact_id' => $form->getVar('_id'),
+        'template_id' => MSG_ID_THANKS,
+      ]);
+      if (!$email['is_error']) {
+        civicrm_api3('CustomValue', 'create', [
+          'entity_id' => $id,
+          'custom_' . CONSENT => 1,
+        ]);
+      }
+    }
   }
 }
 
