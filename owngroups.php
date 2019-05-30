@@ -268,7 +268,7 @@ function owngroups_civicrm_postProcess($formName, &$form) {
       ]);
       if (!$email['is_error']) {
         civicrm_api3('CustomValue', 'create', [
-          'entity_id' => $id,
+          'entity_id' => $form->getVar('_id'),
           'custom_' . CONSENT => 1,
         ]);
       }
