@@ -174,12 +174,12 @@ function owngroups_civicrm_buildForm($formName, &$form) {
   if ($formName == "CRM_Profile_Form_Edit" && $form->getVar('_gid') == PROFILE_ID) {
     if ($cs = CRM_Utils_Request::retrieve('cs', 'String')) {
       if ($id = CRM_Utils_Request::retrieve('id', 'Positive')) {
-//        if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
+        if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
           CRM_Core_Region::instance('page-body')->add(array(
             'template' => 'CRM/YeeHong.tpl',
           ));
           $form->freeze(['email-Primary']);
-//        }
+        }
       }
     }
   }
