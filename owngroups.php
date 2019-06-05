@@ -256,22 +256,30 @@ function owngroups_civicrm_postProcess($formName, &$form) {
       'sequential' => 1,
       'return' => 'custom_' . CONSENT
     ])['values']);
+    $isSent = FALSE;
     if (empty($consent[0])) {
       // Send email since this is the first time of visit.
-      /* $email = civicrm_api3('Email', 'send', [ */
-      /*   'contact_id' => $id, */
-      /*   'template_id' => MSG_ID_CONSENT, */
-      /* ]); */
+      $email = civicrm_api3('Email', 'send', [
+        'contact_id' => $id,
+        'template_id' => MSG_ID_CONSENT,
+      ]);
       $email = civicrm_api3('Email', 'send', [
         'contact_id' => $form->getVar('_id'),
         'template_id' => MSG_ID_THANKS,
       ]);
+      $isSent = TRUE;
       if (!$email['is_error']) {
         civicrm_api3('CustomValue', 'create', [
           'entity_id' => $form->getVar('_id'),
           'custom_' . CONSENT => 1,
         ]);
       }
+    }
+    if (!empty($form->_submitValues['group']) && !$isSent) {
+      $email = civicrm_api3('Email', 'send', [
+        'contact_id' => $form->getVar('_id'),
+        'template_id' => MSG_ID_THANKS,
+      ]);
     }
   }
 }
