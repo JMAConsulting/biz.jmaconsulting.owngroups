@@ -174,12 +174,12 @@ function owngroups_civicrm_buildForm($formName, &$form) {
   if ($formName == "CRM_Profile_Form_Edit" && $form->getVar('_gid') == PROFILE_ID) {
     if ($cs = CRM_Utils_Request::retrieve('cs', 'String')) {
       if ($id = CRM_Utils_Request::retrieve('id', 'Positive')) {
-        if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
+//        if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
           CRM_Core_Region::instance('page-body')->add(array(
             'template' => 'CRM/YeeHong.tpl',
           ));
           $form->freeze(['email-Primary']);
-        }
+//        }
       }
     }
   }
@@ -237,7 +237,7 @@ function owngroups_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = a
 function owngroups_civicrm_postProcess($formName, &$form) {
   if ($formName == "CRM_Profile_Form_Edit" && $form->getVar('_gid') == PROFILE_ID) {
     // Check groups and get group names.
-    if (!empty($form->_submitValues['group'])) {
+    if (!empty(array_filter($form->_submitValues['group']))) {
       foreach ($form->_submitValues['group'] as $group => $value) {
         if ($value) {
           $groups[] = civicrm_api3('Group', 'getvalue', [
@@ -249,6 +249,9 @@ function owngroups_civicrm_postProcess($formName, &$form) {
     }
     if (!empty($groups)) {
       $form->assign('groupsContact', implode(',', $groups));
+    }
+    else {
+      $form->assign('groupsContact', ts('No campaigns selected.'));
     }
     // Check if contact has consented previously.
     $consent = CRM_Utils_Array::collect('custom_' . CONSENT, civicrm_api3('Contact', 'get', [
@@ -275,7 +278,7 @@ function owngroups_civicrm_postProcess($formName, &$form) {
         ]);
       }
     }
-    if (!empty($form->_submitValues['group']) && !$isSent) {
+    if (!$isSent) {
       $email = civicrm_api3('Email', 'send', [
         'contact_id' => $form->getVar('_id'),
         'template_id' => MSG_ID_THANKS,
