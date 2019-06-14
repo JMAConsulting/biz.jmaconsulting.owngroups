@@ -122,7 +122,7 @@ function owngroups_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == 'Group' && $cs = CRM_Utils_Request::retrieve('cs', 'String')) {
     if ($id = CRM_Utils_Request::retrieve('id', 'Positive')) {
       if (CRM_Contact_BAO_Contact_Utils::validChecksum($id, $cs)) {
-        $validGroups = [42,45,3,36,9,51,2,31,32,7,4,8,5,23,39,49,6,21];
+        $validGroups = [42,45,3,36,9,51,2,31,32,7,4,8,5,23,49,6,21];
         $ids = [];
         $groups = (array) civicrm_api3('GroupContact', 'get', [
           'sequential' => 1,
@@ -263,7 +263,7 @@ function owngroups_civicrm_postProcess($formName, &$form) {
     if (empty($consent[0])) {
       // Send email since this is the first time of visit.
       $email = civicrm_api3('Email', 'send', [
-        'contact_id' => $id,
+        'contact_id' => $form->getVar('_id'),
         'template_id' => MSG_ID_CONSENT,
       ]);
       $email = civicrm_api3('Email', 'send', [
