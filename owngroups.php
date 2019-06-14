@@ -247,12 +247,24 @@ function owngroups_civicrm_postProcess($formName, &$form) {
         }
       }
     }
+    $activityParams = array( 
+      'activity_type_id' => 'Preferences Updated',
+      'subject' => 'Preferences have been updated',
+      'status_id' => 'Completed',
+      'activity_date_time' => date('YmdHis'),
+      'source_contact_id' => $form->getVar('_id'),
+      'target_contact_id' => $form->getVar('_id'),
+    );
+    
     if (!empty($groups)) {
       $form->assign('groupsContact', implode(',', $groups));
+      $activityParams['details'] = "Campaigns selected: " . implode(',', $groups);
     }
     else {
       $form->assign('groupsContact', ts('No campaigns selected.'));
+      $activityParams['details'] = ts('No campaigns selected.');
     }
+    civicrm_api3('Activity', 'create', $activityParams);
     // Check if contact has consented previously.
     $consent = CRM_Utils_Array::collect('custom_' . CONSENT, civicrm_api3('Contact', 'get', [
       'id' => $form->getVar('_id'),
