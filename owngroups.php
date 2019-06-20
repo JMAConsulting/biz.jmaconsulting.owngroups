@@ -216,13 +216,15 @@ function owngroups_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = a
         'status' => "Added",
       ])['values'];
       foreach ($groups as $group) {
-        if ($group['visibility'] == 'User and User Admin Only') {
-          continue;
+        if (in_array($group['group_id'], [42,45,3,36,9,51,2,31,32,7,4,8,5,23,49,6,21])) {
+          $groupTitles[] = $group['title'];
         }
-        $groupTitles[] = $group['title'];
       }
       if (!empty($groupTitles)) {
         $values[$cid]['owngroups.grouptitle'] = implode(',', $groupTitles);
+      }
+      else {
+        $values[$cid]['owngroups.grouptitle'] = "No campaign(s) selected.";
       }
     }
   }
