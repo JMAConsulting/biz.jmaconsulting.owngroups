@@ -16,6 +16,18 @@ function owngroups_civicrm_config(&$config) {
   _owngroups_civix_civicrm_config($config);
 }
 
+function _civicrm_api3_group_getlist_params(&$request) {
+  $fieldsToReturn = [$request['id_field'], $request['label_field']];
+  $request['params']['return'] = array_unique(array_merge($fieldsToReturn, $request['extra']));
+  if (empty($request['params']['id'])) {
+    $groups = CRM_ACL_API::group(CRM_ACL_API::VIEW);
+    if (!empty($groups)) {
+      $request['params']['id'] = ['IN' => $groups];
+      $request['params']['group_type'] = ['LIKE' => "%2%"];
+    }
+  }
+}
+
 /**
  * Implementation of hook_civicrm_xmlMenu
  *
