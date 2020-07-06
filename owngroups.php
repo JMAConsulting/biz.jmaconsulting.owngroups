@@ -290,6 +290,16 @@ function owngroups_civicrm_postProcess($formName, &$form) {
           'entity_id' => $form->getVar('_id'),
           'custom_' . CONSENT => 1,
         ]);
+        $displayName = CRM_Contact_BAO_Contact::displayName($form->getVar('_id'));
+        $consentActivity = array(
+          'activity_type_id' => 'Consent Given',
+          'subject' => "Contact $displayName has granted consent",
+          'status_id' => 'Completed',
+          'activity_date_time' => date('YmdHis'),
+          'source_contact_id' => $form->getVar('_id'),
+          'target_contact_id' => $form->getVar('_id'),
+        );
+        civicrm_api3('Activity', 'create', $consentActivity);
       }
     }
     if (!$isSent) {
