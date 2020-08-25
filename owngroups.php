@@ -5,6 +5,8 @@ define('MSG_ID_CONSENT', 68);
 define('MSG_ID_THANKS', 69);
 define('MSG_ID_REQUEST_CONSENT', 70);
 
+use CRM_Owngroups_ExtensionUtil as E;
+
 require_once 'owngroups.civix.php';
 
 /**
@@ -183,6 +185,22 @@ function owngroups_civicrm_buildForm($formName, &$form) {
       }
     }
   }
+  if ($formName == "CRM_Group_Form_Edit") {
+    $form->addYesNo('is_preference', E::ts('Show this group on preferences page?'), TRUE);
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/Preference.tpl',
+    ));
+    if ($form->_action & CRM_Core_Action::UPDATE) {
+      // Set default value.
+      $preference = civicrm_api3('PreferenceGroup', 'getpreference', [
+        'group_id' => $form->_id,
+        'sequential' => 1,
+      ]);
+      if (!empty($preference['id'])) {
+        $form->setDefaults(['is_preference' => $preference['values'][0]['is_preference']]);
+      }
+    }
+  }
 }
 
 /**
@@ -230,6 +248,8 @@ function owngroups_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = a
   }
 }
 
+
+
 /**
  * Implements hook_civicrm_postProcess().
  *
@@ -237,6 +257,17 @@ function owngroups_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = a
  * @param CRM_Core_Form $form
  */
 function owngroups_civicrm_postProcess($formName, &$form) {
+  if ($formName == "CRM_Group_Form_Edit") {
+    $preference = civicrm_api3('PreferenceGroup', 'getpreference', [
+      'group_id' => $form->_id,
+      'sequential' => 1,
+    ]);
+    civicrm_api3('PreferenceGroup', 'createpreference', [
+      'is_preference' => CRM_Utils_Array::value('is_preference', $form->_submitValues, NULL),
+      'group_id' => $form->_id,
+      'id' => $preference['id'],
+    ]);
+  }
   if ($formName == "CRM_Profile_Form_Edit" && $form->getVar('_gid') == PROFILE_ID) {
     // Check groups and get group names.
     if (!empty(array_filter($form->_submitValues['group']))) {
