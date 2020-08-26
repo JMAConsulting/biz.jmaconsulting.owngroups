@@ -32,19 +32,17 @@ class CRM_Owngroups_BAO_PreferenceGroup extends CRM_Owngroups_DAO_PreferenceGrou
    */
   public function get($params) {
     $className = 'CRM_Owngroups_DAO_PreferenceGroup';
-    $entityName = 'PreferenceGroup';
     $instance = new $className();
     $instance->copyValues($params);
-    $instance->find(TRUE);
     $returnValues = [];
-    if ($instance->N > 0) {
-      $returnValues = [
-        $instance->id => [
+    if ($instance->find()) {
+      while ($instance->fetch()) {
+        $returnValues[$instance->id] = [
           "id" => $instance->id,
           "group_id" => $instance->group_id,
           "is_preference" => $instance->is_preference,
-        ],
-      ];
+        ];
+      }
     }
     return $returnValues;
   }
