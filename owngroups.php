@@ -234,7 +234,11 @@ function owngroups_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = a
         'status' => "Added",
       ])['values'];
       foreach ($groups as $group) {
-        if (in_array($group['group_id'], [42,45,3,36,9,51,2,31,32,7,4,8,5,23,49,6,21])) {
+        $preference = civicrm_api3('PreferenceGroup', 'getpreference', [
+          'group_id' => $group['group_id'],
+          'sequential' => 1,
+        ]);
+        if ($preference['values'][0]['is_preference']) {
           $groupTitles[] = $group['title'];
         }
       }
