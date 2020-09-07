@@ -13,7 +13,7 @@ use CRM_Owngroups_ExtensionUtil as E;
  *
  * @throws API_Exception
  */
-function civicrm_api3_preference_group_Getpreference($params) {
+function civicrm_api3_preference_group_getpreference($params) {
   $returnValues = CRM_Owngroups_BAO_PreferenceGroup::get($params);
   return civicrm_api3_create_success($returnValues, $params, 'PreferenceGroup', 'GetPreference');
 }

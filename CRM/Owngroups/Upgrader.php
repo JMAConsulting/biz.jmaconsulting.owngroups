@@ -74,6 +74,18 @@ class CRM_Owngroups_Upgrader extends CRM_Owngroups_Upgrader_Base {
    * @return TRUE on success
    * @throws Exception
    */
+  public function upgrade_1000() {
+    $this->ctx->log->info('Applying update 1000: Create Table to store preference group');
+    $this->executeSqlFile('sql/upgrade_1000.sql');
+    return TRUE;
+  }
+
+  /**
+   * Example: Run a couple simple queries.
+   *
+   * @return TRUE on success
+   * @throws Exception
+   */
    public function upgrade_1100() {
      $this->ctx->log->info('Applying update 1100: Add Preference for existing groups');
      $groups = [
